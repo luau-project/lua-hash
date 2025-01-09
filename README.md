@@ -1,5 +1,9 @@
 # lua-hash
 
+> [!IMPORTANT]
+> 
+> **DO NOT** use this library for now. There are issues that must be fixed before adoption.
+
 [![CI](https://github.com/luau-project/lua-hash/actions/workflows/ci.yml/badge.svg)](./.github/workflows/ci.yml) [![LuaRocks](https://img.shields.io/luarocks/v/luau-project/lua-hash?label=LuaRocks&color=2c3e67)](https://luarocks.org/modules/luau-project/lua-hash)
 
 ## Overview
