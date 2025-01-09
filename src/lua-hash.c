@@ -685,7 +685,12 @@ static int lua_hash_digest_update(lua_State *L)
 
     if (lua_istable(L, 2))
     {
+
+#if LUA_VERSION_NUM == 501
+        lua_Integer table_size = lua_objlen(L, 2);
+#else
         lua_Integer table_size = luaL_len(L, 2);
+#endif
         if (table_size == 0)
         {
             luaL_error(L, "table is empty");
