@@ -785,7 +785,7 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
 #elif defined(LUA_HASH_USE_OPENSSL)
             
     unsigned int len = 0;
-    if (!EVP_DigestFinal(info->ctx->ctx_handle, buffer, &len))
+    if (!EVP_DigestFinal(info->ctx->ctx_handle, (unsigned char *)buffer, &len))
     {
         if (free_buffer)
         {
@@ -1169,7 +1169,7 @@ static int lua_hash_oneshot(lua_State *L)
 #elif defined(LUA_HASH_USE_OPENSSL)
             
     unsigned int len = 0;
-    if (!EVP_DigestFinal(ctx_handle, output_buffer, &len))
+    if (!EVP_DigestFinal(ctx_handle, (unsigned char *)output_buffer, &len))
     {
         free(output_buffer);
         EVP_MD_CTX_destroy(ctx_handle);
