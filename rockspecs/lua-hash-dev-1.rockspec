@@ -46,7 +46,6 @@ local function build_plat(plat)
                 CFLAGS = "$(CFLAGS)",                                                                         
                 LIBFLAG = "$(LIBFLAG)",
                 CFLAGS_EXTRA = "-DLUA_HASH_BUILD_SHARED -DLUA_HASH_USE_APPLE",
-                LIBFLAG_EXTRA = "",
                 LUA_INCDIR = "$(LUA_INCDIR)",
                 OBJ_EXTENSION = "$(OBJ_EXTENSION)",
                 LIB_EXTENSION = "$(LIB_EXTENSION)"
