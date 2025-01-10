@@ -20,7 +20,7 @@
 
 ## Supported Algorithms
 
----
+|---|---|
 | Algorithm | Description |
 | --- | --- |
 | MD5 | An implementation of MD5 hashing with a 128-bit digest |

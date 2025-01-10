@@ -951,8 +951,6 @@ static int lua_hash_oneshot(lua_State *L)
 
     luaL_argcheck(L, size > 0, 2, "string cannot be empty");
 
-    unsigned char *buffer = (unsigned char *)data;
-
     size_t digest_length;
 
 #if defined(LUA_HASH_USE_WIN32)
@@ -1100,7 +1098,7 @@ static int lua_hash_oneshot(lua_State *L)
 #if defined(LUA_HASH_USE_WIN32)
     status = BCryptHashData(
         ctx_handle,
-        buffer,
+        (unsigned char *)data,
         (ULONG)size,
         0
     );
@@ -1113,14 +1111,14 @@ static int lua_hash_oneshot(lua_State *L)
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
-    if (!update_fn(ctx_handle, (const void *)buffer, (CC_LONG)size))
+    if (!update_fn(ctx_handle, (const void *)data, (CC_LONG)size))
     {
         free(ctx_handle);
         luaL_error(L, "Error hashing data through update");
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
-    if (!EVP_DigestUpdate(ctx_handle, (const void *)buffer, size))
+    if (!EVP_DigestUpdate(ctx_handle, (const void *)data, size))
     {
         EVP_MD_CTX_destroy(ctx_handle);
 #if defined(OPENSSL_VERSION_PREREQ) && OPENSSL_VERSION_PREREQ(3,0)
@@ -1182,7 +1180,28 @@ static int lua_hash_oneshot(lua_State *L)
     }
 
 #endif
+    /* end of digest finalize */
 
+    /* start of native resources cleanup */
+#if defined(LUA_HASH_USE_WIN32)
+    BCryptDestroyHash(ctx_handle);
+    BCryptCloseAlgorithmProvider(algorithm_handle, 0);
+#elif defined(LUA_HASH_USE_APPLE)
+    free(ctx_handle);
+#elif defined(LUA_HASH_USE_OPENSSL)
+    EVP_MD_CTX_destroy(ctx_handle);
+#if defined(OPENSSL_VERSION_PREREQ) && OPENSSL_VERSION_PREREQ(3,0)
+    EVP_MD_free(algorithm_handle);
+#else
+        /* do nothing */
+#endif
+#endif
+    /* end of native resources cleanup */
+
+    /*
+    ** converting the output
+    ** to a hex-string
+    */
     size_t hex_string_len = 2 * digest_length;
     char *hex_string = (char *)(malloc(hex_string_len + 1));
     if (hex_string == NULL)
@@ -1202,23 +1221,6 @@ static int lua_hash_oneshot(lua_State *L)
     free(hex_string);
 
     free(output_buffer);
-    /* end of digest finalize */
-
-    /* start of cleanup */
-#if defined(LUA_HASH_USE_WIN32)
-    BCryptDestroyHash(ctx_handle);
-    BCryptCloseAlgorithmProvider(algorithm_handle, 0);
-#elif defined(LUA_HASH_USE_APPLE)
-    free(ctx_handle);
-#elif defined(LUA_HASH_USE_OPENSSL)
-    EVP_MD_CTX_destroy(ctx_handle);
-#if defined(OPENSSL_VERSION_PREREQ) && OPENSSL_VERSION_PREREQ(3,0)
-    EVP_MD_free(algorithm_handle);
-#else
-        /* do nothing */
-#endif
-#endif
-    /* end of cleanup */
 
     return 1;
 }
