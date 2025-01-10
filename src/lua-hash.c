@@ -104,9 +104,9 @@ static int LuaDigestFinal_SHA256(unsigned char *md, void *ctx_handle) { return C
 
 /* SHA384 functions */
 
-static int LuaDigestInit_SHA384(void *ctx_handle) { return CC_SHA384_Init((CC_SHA384_CTX *)ctx_handle); }
-static int LuaDigestUpdate_SHA384(void *ctx_handle, const void *data, CC_LONG len) { return CC_SHA384_Update((CC_SHA384_CTX *)ctx_handle, data, len); }
-static int LuaDigestFinal_SHA384(unsigned char *md, void *ctx_handle) { return CC_SHA384_Final(md, (CC_SHA384_CTX *)ctx_handle); }
+static int LuaDigestInit_SHA384(void *ctx_handle) { return CC_SHA384_Init((CC_SHA512_CTX *)ctx_handle); }
+static int LuaDigestUpdate_SHA384(void *ctx_handle, const void *data, CC_LONG len) { return CC_SHA384_Update((CC_SHA512_CTX *)ctx_handle, data, len); }
+static int LuaDigestFinal_SHA384(unsigned char *md, void *ctx_handle) { return CC_SHA384_Final(md, (CC_SHA512_CTX *)ctx_handle); }
 
 /* SHA512 functions */
 
@@ -188,7 +188,7 @@ static const LuaHashAlgorithmEntry lua_hash_algorithms[] = {/*
     {"MD5", LUA_HASH_ALGORITHM_MD5, sizeof(CC_MD5_CTX), LuaDigestInit_MD5, LuaDigestUpdate_MD5, LuaDigestFinal_MD5, CC_MD5_DIGEST_LENGTH},
     {"SHA1", LUA_HASH_ALGORITHM_SHA1, sizeof(CC_SHA1_CTX), LuaDigestInit_SHA1, LuaDigestUpdate_SHA1, LuaDigestFinal_SHA1, CC_SHA1_DIGEST_LENGTH},
     {"SHA256", LUA_HASH_ALGORITHM_SHA256, sizeof(CC_SHA256_CTX), LuaDigestInit_SHA256, LuaDigestUpdate_SHA256, LuaDigestFinal_SHA256, CC_SHA256_DIGEST_LENGTH},
-    {"SHA384", LUA_HASH_ALGORITHM_SHA384, sizeof(CC_SHA384_CTX), LuaDigestInit_SHA384, LuaDigestUpdate_SHA384, LuaDigestFinal_SHA384, CC_SHA384_DIGEST_LENGTH},
+    {"SHA384", LUA_HASH_ALGORITHM_SHA384, sizeof(CC_SHA512_CTX), LuaDigestInit_SHA384, LuaDigestUpdate_SHA384, LuaDigestFinal_SHA384, CC_SHA384_DIGEST_LENGTH},
     {"SHA512", LUA_HASH_ALGORITHM_SHA512, sizeof(CC_SHA512_CTX), LuaDigestInit_SHA512, LuaDigestUpdate_SHA512, LuaDigestFinal_SHA512, CC_SHA512_DIGEST_LENGTH},
     {NULL, LUA_HASH_ALGORITHM_LAST, 0, NULL, NULL, NULL, 0}
 };
