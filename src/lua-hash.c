@@ -65,7 +65,7 @@ typedef enum tagLuaHashAlgorithmId {
     LUA_HASH_ALGORITHM_LAST
 } LuaHashAlgorithmId;
 
-#ifdef LUA_HASH_USE_APPLE
+#if defined(LUA_HASH_USE_APPLE)
 /* prototypes for LuaDigest */
 typedef int (*LuaDigestInit)(void *ctx_handle);
 typedef int (*LuaDigestUpdate)(void *ctx_handle, const void *data, CC_LONG len);
@@ -181,7 +181,7 @@ static const LuaHashAlgorithmEntry lua_hash_algorithms[] = {/*
     {"SHA512", LUA_HASH_ALGORITHM_SHA512, BCRYPT_SHA512_ALGORITHM},
     {NULL, LUA_HASH_ALGORITHM_LAST, NULL}
 };
-#elif defined (LUA_HASH_USE_APPLE)
+#elif defined(LUA_HASH_USE_APPLE)
 static const LuaHashAlgorithmEntry lua_hash_algorithms[] = {/*
     {"MD2", LUA_HASH_ALGORITHM_MD2, sizeof(CC_MD2_CTX), LuaDigestInit_MD2, LuaDigestUpdate_MD2, LuaDigestFinal_MD2, CC_MD2_DIGEST_LENGTH},
     {"MD4", LUA_HASH_ALGORITHM_MD4, sizeof(CC_MD4_CTX), LuaDigestInit_MD4, LuaDigestUpdate_MD4, LuaDigestFinal_MD4, CC_MD4_DIGEST_LENGTH},*/
@@ -190,7 +190,7 @@ static const LuaHashAlgorithmEntry lua_hash_algorithms[] = {/*
     {"SHA256", LUA_HASH_ALGORITHM_SHA256, sizeof(CC_SHA256_CTX), LuaDigestInit_SHA256, LuaDigestUpdate_SHA256, LuaDigestFinal_SHA256, CC_SHA256_DIGEST_LENGTH},
     {"SHA384", LUA_HASH_ALGORITHM_SHA384, sizeof(CC_SHA384_CTX), LuaDigestInit_SHA384, LuaDigestUpdate_SHA384, LuaDigestFinal_SHA384, CC_SHA384_DIGEST_LENGTH},
     {"SHA512", LUA_HASH_ALGORITHM_SHA512, sizeof(CC_SHA512_CTX), LuaDigestInit_SHA512, LuaDigestUpdate_SHA512, LuaDigestFinal_SHA512, CC_SHA512_DIGEST_LENGTH},
-    {NULL, LUA_HASH_ALGORITHM_LAST, 0}
+    {NULL, LUA_HASH_ALGORITHM_LAST, 0, NULL, NULL, NULL, 0}
 };
 #else
 static const LuaHashAlgorithmEntry lua_hash_algorithms[] = {/*
@@ -538,7 +538,7 @@ static int lua_hash_digest_new(lua_State *L)
     /* nothing */
 
 #elif defined(LUA_HASH_USE_APPLE)
-    if (!(algo->init_fc)(ctx->ctx_handle))
+    if (!algo->init_fn(ctx->ctx_handle))
     {
         lua_pop(L, 1);
         luaL_error(L, "Error intializing digest through init");
@@ -652,7 +652,7 @@ static void lua_hash_digest_update_core(lua_State *L, unsigned char *buffer, siz
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
-    if (!(info->algo->update_fn)(info->ctx->ctx_handle, (const void *)buffer, (CC_LONG)size))
+    if (!info->algo->update_fn(info->ctx->ctx_handle, (const void *)buffer, (CC_LONG)size))
     {
         if (free_buffer)
         {
@@ -773,7 +773,7 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
 
 #elif defined(LUA_HASH_USE_APPLE)
             
-    if (!(info->algo->final_fn)((unsigned char *)buffer, info->ctx->ctx_handle))
+    if (!info->algo->final_fn((unsigned char *)buffer, info->ctx->ctx_handle))
     {
         if (free_buffer)
         {
@@ -1075,7 +1075,7 @@ static int lua_hash_oneshot(lua_State *L)
     /* nothing */
 
 #elif defined(LUA_HASH_USE_APPLE)
-    if (!init_fc(ctx_handle))
+    if (!init_fn(ctx_handle))
     {
         free(ctx_handle);
         luaL_error(L, "Error intializing digest through init");

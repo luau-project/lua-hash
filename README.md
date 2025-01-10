@@ -10,7 +10,7 @@
 
 **lua-hash** is a lightweight, native library providing hash algorithms for Lua.
 
-* On Unix-like distributions, it uses the ```OpenSSL``` library to generate random numbers;
+* On Unix-like distributions, it uses the ```OpenSSL``` library;
 * On Windows, it uses the WINAPI ```bcrypt``` library;
 * On macOS / iOS, it uses the ```CommonCrypto``` framework.
 
