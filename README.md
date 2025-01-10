@@ -18,6 +18,17 @@
 > 
 > ```lua-hash``` is implemented in C, and also compiles as C++.
 
+## Supported Algorithms
+
+---
+| Algorithm | Description |
+| --- | --- |
+| MD5 | An implementation of MD5 hashing with a 128-bit digest |
+| SHA1 | An implementation of SHA1 hashing with a 160-bit digest |
+| SHA256 | An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 256-bit digest |
+| SHA384 | An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 384-bit digest |
+| SHA512 | An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 512-bit digest |
+
 ## Table of Contents
 
 * [Installation](#installation)
@@ -71,7 +82,7 @@ luarocks install lua-hash
 
 ### Compute SHA256 hash of a text on memory
 
-This manner is suitable for (*small*) text that fits well in the memory. For a complete list of algorithms, check [oneshot](#oneshot).
+This manner is suitable for (*small*) text that fits well in the memory. For a complete list of algorithms, check [Supported Algorithms](#supported-algorithms).
 
 ```lua
 -- the text to be hashed
@@ -165,74 +176,9 @@ algo:close()
 * *Description*: The oneshot function provides a quick manner to compute the hash of a text held in memory.
 * *Signature*: ```oneshot(name, text)```
 * *Parameters*:
-    * *name* (```string```): the name of the algorithm. The table below lists all the possibles values for the ```name``` parameter    
+    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list containing the possible values for parameter.  
     * *text* (```string```): the text to compute a hash.
 * *Return* (```string```): A hex string containing the hash of the text.
-
-    <table>
-    <thead>
-    <tr>
-    <td>
-    
-    ```name```
-    
-    </td>
-    <td>Description</td>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-    <td>
-    
-    ```lua
-    "MD5"
-    ```
-
-    </td>
-    <td>An implementation of MD5 hashing</td>
-    </tr>
-    <tr>
-    <td>
-    
-    ```lua
-    "SHA1"
-    ```
-
-    </td>
-    <td>An implementation of SHA1 hashing</td>
-    </tr>
-    <tr>
-    <td>
-    
-    ```lua
-    "SHA256"
-    ```
-
-    </td>
-    <td>An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 256-bit digest</td>
-    </tr>
-    <tr>
-    <td>
-    
-    ```lua
-    "SHA384"
-    ```
-
-    </td>
-    <td>An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 384-bit digest</td>
-    </tr>
-    <tr>
-    <td>
-    
-    ```lua
-    "SHA512"
-    ```
-
-    </td>
-    <td>An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 512-bit digest</td>
-    </tr>
-    </tbody>
-    </table>
 
 ## Classes
 
@@ -251,7 +197,7 @@ Implementation of a hash algorithm provided by the underlying library.
 * *Description*: Opens the implementation of a given hash algorithm and initializes resources.
 * *Signature*: ```open(name)```
 * *Parameters*:
-    * *name* (```string```): the name of the algorithm. See [oneshot](#oneshot) for a list of all the possible algorithm.
+    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list of all the possible algorithms.
 > [!WARNING]
 > 
 > According to Apple (see [[1]](https://developer.apple.com/documentation/cryptokit/insecure/md5) and [[2]](https://developer.apple.com/documentation/cryptokit/insecure/sha1)), MD5 and SHA1 are considered insecure algorithms, but they are provided for backward compatibility with older services that require it. For new services, prefer SHA512.
