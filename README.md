@@ -24,6 +24,10 @@
 | SHA384 | An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 384-bit digest |
 | SHA512 | An implementation of Secure Hashing Algorithm 2 (SHA-2) hashing with a 512-bit digest |
 
+> [!WARNING]
+> 
+> According to Apple (see [[1]](https://developer.apple.com/documentation/cryptokit/insecure/md5) and [[2]](https://developer.apple.com/documentation/cryptokit/insecure/sha1)), MD5 and SHA1 are considered insecure algorithms, but they are provided for backward compatibility with older services that require it. For new services, prefer SHA512.
+
 ## Table of Contents
 
 * [Installation](#installation)
@@ -101,7 +105,7 @@ print("SHA384 hash is", SHA384_hash)
 print("SHA512 hash is", SHA512_hash)
 ```
 
-### Compute a SHA512 hash of file
+### Compute a SHA512 hash of a file
 
 By the use of the core API, you can compute a hash of a file of any size (even the huge ones).
 
@@ -179,7 +183,7 @@ algo:close()
 * *Description*: The oneshot function provides a quick manner to compute the hash of a text held in memory.
 * *Signature*: ```oneshot(name, text)```
 * *Parameters*:
-    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list containing the possible values for parameter.  
+    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list containing the possible values for this parameter.  
     * *text* (```string```): the text to compute a hash.
 * *Return* (```string```): A hex string containing the hash of the text.
 
@@ -201,9 +205,6 @@ Implementation of a hash algorithm provided by the underlying library.
 * *Signature*: ```open(name)```
 * *Parameters*:
     * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list of all the possible algorithms.
-> [!WARNING]
-> 
-> According to Apple (see [[1]](https://developer.apple.com/documentation/cryptokit/insecure/md5) and [[2]](https://developer.apple.com/documentation/cryptokit/insecure/sha1)), MD5 and SHA1 are considered insecure algorithms, but they are provided for backward compatibility with older services that require it. For new services, prefer SHA512.
 
 * *Return* (```userdata```): A handle to the hash algorithm.
 * *Remark*: In case of failure, this function throws an error. It might happen if the underlying library does not support the hash algorithm identified by the```name``` parameter.
