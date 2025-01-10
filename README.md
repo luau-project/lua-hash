@@ -1,9 +1,5 @@
 # lua-hash
 
-> [!IMPORTANT]
-> 
-> **DO NOT** use this library for now. There are issues that must be fixed before adoption.
-
 [![CI](https://github.com/luau-project/lua-hash/actions/workflows/ci.yml/badge.svg)](./.github/workflows/ci.yml) [![LuaRocks](https://img.shields.io/luarocks/v/luau-project/lua-hash?label=LuaRocks&color=2c3e67)](https://luarocks.org/modules/luau-project/lua-hash)
 
 ## Overview
@@ -20,7 +16,6 @@
 
 ## Supported Algorithms
 
-|---|---|
 | Algorithm | Description |
 | --- | --- |
 | MD5 | An implementation of MD5 hashing with a 128-bit digest |
@@ -80,31 +75,35 @@ luarocks install lua-hash
 
 ## Usage
 
-### Compute SHA256 hash of a text on memory
+### Compute hash of a text on memory
 
-This manner is suitable for (*small*) text that fits well in the memory. For a complete list of algorithms, check [Supported Algorithms](#supported-algorithms).
+This manner is suitable for (*small*) text that fits well in the memory.
 
 ```lua
--- the text to be hashed
-local text = "lua-hash is a cool hashing library"
-
 -- load the library
 local hash = require("lua-hash")
 
--- get the output as a hex-string
-local output = hash.oneshot("SHA256", text)
+-- the text to be hashed
+local text = "lua-hash is a cool hashing library"
 
--- print the output
-print(output)
+-- hash 'text' by different algorithms
+local MD5_hash = hash.oneshot("MD5", text)
+local SHA1_hash = hash.oneshot("SHA1", text)
+local SHA256_hash = hash.oneshot("SHA256", text)
+local SHA384_hash = hash.oneshot("SHA384", text)
+local SHA512_hash = hash.oneshot("SHA512", text)
+
+-- print the hash of 'text' computed by different algorithms
+print("MD5 hash is", MD5_hash)
+print("SHA1 hash is", SHA1_hash)
+print("SHA256 hash is", SHA256_hash)
+print("SHA384 hash is", SHA384_hash)
+print("SHA512 hash is", SHA512_hash)
 ```
-
-> [!TIP]
-> 
-> Changing the string ```SHA512``` above to ```MD5``` would print a MD5 hash of the text.
 
 ### Compute a SHA512 hash of file
 
-Use the core API to compute a hash of a file
+By the use of the core API, you can compute a hash of a file of any size (even the huge ones).
 
 ```lua
 -- the file path to compute a SHA512 hash
@@ -168,6 +167,10 @@ ctx:close()
 -- automatically at garbage collection
 algo:close()
 ```
+
+> [!TIP]
+> 
+> In the [checksums](./checksums/README.md#computing-file-checksums) folder, you can find scripts for each available hashing algorithm on this library.
 
 ## Methods
 
