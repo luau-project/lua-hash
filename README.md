@@ -258,10 +258,10 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
 
 #### finalize
 
-* *Description*: Hashes the data into the context.
+* *Description*: Retrieves the digest value from the context.
 * *Signature*: ```digest:finalize(options)```
 * *Parameters*:
-    * *options* (```nil | string | table```): the data to be hashed into the context. If ```data``` is a string, the only requirement is that it cannot be an empty string. Otherwise, when ```data``` is a table, it is mandatory to have a field ```type``` describing the desired return type (with possible values of 'string' or 'table'). Moreover, ```type``` is ```"string"```, an optional boolean field ```hex``` can be assigned to signal whether the resulting hash should be formatted as hex string or not.
+    * *options* (```nil | string | table```): the options specifying how to return the hash. If ```options``` is a string, the only requirement is that it cannot be an empty string. Otherwise, when ```options``` is a table, it is mandatory to have a field ```type``` describing the desired return type (with possible values of 'string' or 'table'). Moreover, when ```type``` is equal to ```"string"```, an optional boolean field ```hex``` can be assigned to signal whether the resulting hash should be formatted as hex string or not.
         * *examples*:
             * output a hex string:
                 ```lua
