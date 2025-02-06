@@ -1,8 +1,9 @@
 package = "lua-hash"
-version = "dev-1"
+version = "0.0.2-1"
 
 source = {
-   url = "git+https://github.com/luau-project/lua-hash"
+   url = "git+https://github.com/luau-project/lua-hash",
+   tag = "v0.0.2"
 }
 
 description = {
