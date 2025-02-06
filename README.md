@@ -6,7 +6,7 @@
 
 **lua-hash** is a lightweight, native library providing hash algorithms for Lua.
 
-* On Unix-like distributions, it uses the ```OpenSSL``` library;
+* On Unix-like distributions, it uses the [OpenSSL](https://www.openssl.org/) library;
 * On Windows, it uses the WINAPI ```bcrypt``` library;
 * On macOS / iOS, it uses the ```CommonCrypto``` framework.
 
@@ -39,10 +39,10 @@
         * [open](#open)
         * [close](#close)
     * [context](#context)
-        * [new](#context)
-        * [close](#context)
+        * [new](#new)
+        * [close](#close-1)
     * [digest](#digest)
-        * [new](#digest)
+        * [new](#new-1)
         * [update](#update)
         * [finalize](#finalize)
 * [Change log](#change-log)
@@ -212,7 +212,8 @@ Implementation of a hash algorithm provided by the underlying library.
 #### close
 
 * *Description*: Closes the algorithm and free resources.
-* *Signature*: ```algorithm:close()```
+* *Signature*: ```instance:close()```
+    * *instance* (```userdata```): an instance of the [algorithm](#algorithm) class
 * *Return* (```void```)
 
 ### context
@@ -231,7 +232,8 @@ A manager to process a digest associated to a given hash algorithm
 #### close
 
 * *Description*: Closes the context and free resources.
-* *Signature*: ```context:close()```
+* *Signature*: ```instance:close()```
+    * *instance* (```userdata```): an instance of the [context](#context) class
 * *Return* (```void```)
 
 ### digest
@@ -250,7 +252,8 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
 #### update
 
 * *Description*: Hashes the data into the context.
-* *Signature*: ```digest:update(data)```
+* *Signature*: ```message:update(data)```
+    * *message* (```userdata```): an instance of the [digest](#digest) class
 * *Parameters*:
     * *data* (```string | table```): the data to be hashed into the context. If ```data``` is a string, the only requirement is that it cannot be an empty string. Otherwise, when ```data``` is a table, it is expected to be an array of bytes, i.e., elements are integers in 0 - 255 range.
 * *Return* (```void```)
@@ -259,24 +262,25 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
 #### finalize
 
 * *Description*: Retrieves the digest value from the context.
-* *Signature*: ```digest:finalize(options)```
+* *Signature*: ```message:finalize(options)```
+    * *message* (```userdata```): an instance of the [digest](#digest) class
 * *Parameters*:
     * *options* (```nil | table```): when ```options``` is nil or not specified at all, a hex string is returned. Otherwise, when ```options``` is a table, it is mandatory to have a field ```type``` describing the desired return type ('string' or 'table'). Moreover, when ```type``` is equal to ```'string'```, an optional boolean field ```hex``` can be assigned to signal whether the resulting hash should be formatted as hex string or not.
         * *examples*:
             * output a hex string:
                 ```lua
                 -- output is a hex string
-                local output = digest:finalize()
+                local output = message:finalize()
                 ```
             * output a hex string:
                 ```lua
                 -- output is a hex string
-                local output = digest:finalize(nil)
+                local output = message:finalize(nil)
                 ```
             * (alternative) output a hex string:
                 ```lua
                 -- output is a hex string
-                local output = digest:finalize({ type = 'string', hex = true })
+                local output = message:finalize({ type = 'string', hex = true })
                 ```
             * output a string (*not hex-formatted*):
                 ```lua
@@ -285,13 +289,13 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
                 -- Usually, this output string
                 -- contains characters that cannot
                 -- be rendered nicely on the screen.
-                local output = digest:finalize({ type = 'string', hex = false })
+                local output = message:finalize({ type = 'string', hex = false })
                 ```
             * output a table of bytes:
                 ```lua
                 -- output is a table (array) such that
                 -- each element falls in the 0 - 255 range
-                local output = digest:finalize({ type = 'table' })
+                local output = message:finalize({ type = 'table' })
                 ```
 * *Return* (```string | table```): the resulting hash of the whole set of bytes pushed into the context.
 * *Remark*:
@@ -300,7 +304,11 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
 
 ## Change log
 
-v0.0.1: Initial release.
+* v0.0.2:
+    * Added the possibility for all Unix-like distributions to build and install ```lua-hash``` using the binding for ```OpenSSL```;
+    * Added a CI job to build and test ```lua-hash``` on [Cygwin](https://www.cygwin.com/);
+    * Now, as a Unix-like distribution, Cygwin builds as a Unix distro. Thus, in order to build on Cygwin, you need to install the package ```libssl-devel```.
+* v0.0.1: Initial release.
 
 ## Future works
 
