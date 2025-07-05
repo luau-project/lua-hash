@@ -324,11 +324,11 @@ jobs:
           path: lua-hash
 
       - name: Install libssl-dev
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        if: ${{ runner.os == 'Linux' }}
         run: sudo apt install -y libssl-dev
 
       - name: Setup MSVC dev-prompt
-        if: ${{ matrix.os == 'windows-latest' && matrix.lua-version != 'luajit' }}
+        if: ${{ runner.os == 'Windows' && matrix.lua-version != 'luajit' }}
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup Lua
