@@ -355,8 +355,7 @@ static int lua_hash_algorithm_close(lua_State *L)
 
 static int lua_hash_algorithm_new_index(lua_State *L)
 {
-    luaL_error(L, "Read-only object");
-    return 0;
+    return luaL_error(L, "Read-only object");
 }
 
 static const luaL_Reg lua_hash_algorithm_functions[] = {
@@ -483,8 +482,7 @@ static int lua_hash_digest_context_close(lua_State *L)
 
 static int lua_hash_digest_context_new_index(lua_State *L)
 {
-    luaL_error(L, "Read-only object");
-    return 0;
+    return luaL_error(L, "Read-only object");
 }
 
 static const luaL_Reg lua_hash_digest_context_functions[] = {
@@ -920,8 +918,7 @@ static int lua_hash_digest_finalize(lua_State *L)
 
 static int lua_hash_digest_new_index(lua_State *L)
 {
-    luaL_error(L, "Read-only object");
-    return 0;
+    return luaL_error(L, "Read-only object");
 }
 
 static const luaL_Reg lua_hash_digest_functions[] = {
@@ -1230,8 +1227,7 @@ static int lua_hash_oneshot(lua_State *L)
 
 static int lua_hash_new_index(lua_State *L)
 {
-    luaL_error(L, "Read-only object");
-    return 0;
+    return luaL_error(L, "Read-only object");
 }
 
 LUA_HASH_EXPORT int luaopen_hash(lua_State *L)
