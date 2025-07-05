@@ -293,11 +293,16 @@ jobs:
 
         os:
           - windows-latest
+          - windows-11-arm
           - ubuntu-latest
+          - ubuntu-24.04-arm
           - macos-latest
 
         exclude:
           - os: macos-latest
+            lua-version: luajit
+
+          - os: windows-11-arm
             lua-version: luajit
 
     steps:
@@ -387,7 +392,7 @@ jobs:
 
   msys2-build:
     name: MSYS2 Build
-    runs-on: windows-latest
+    runs-on: ${{ matrix.MSYS2_CONFIG.os }}
 
     defaults:
       run:
@@ -397,9 +402,10 @@ jobs:
       matrix:
 
         MSYS2_CONFIG:
-          - { sys: mingw64, env: x86_64 }
-          - { sys: ucrt64, env: ucrt-x86_64 }
-          - { sys: clang64, env: clang-x86_64 }
+          - { sys: mingw64, env: x86_64, os: windows-latest }
+          - { sys: ucrt64, env: ucrt-x86_64, os: windows-latest }
+          - { sys: clang64, env: clang-x86_64, os: windows-latest }
+          - { sys: clangarm64, env: clang-aarch64, os: windows-11-arm }
 
         Lua:
           - { version: '5.4', msys2-pkg-name: 'lua', msys2-lua-interpreter: 'lua' }
