@@ -330,6 +330,8 @@ jobs:
       - name: Setup MSVC dev-prompt
         if: ${{ runner.os == 'Windows' && matrix.lua-version != 'luajit' }}
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: ${{ runner.arch }}
 
       - name: Setup Lua
         uses: luarocks/gh-actions-lua@989f8e6ffba55ce1817e236478c98558e598776c # v11
