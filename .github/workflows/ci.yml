@@ -13,7 +13,7 @@ on:
       - "checksums/*.md"
 
 env:
-  ROCKSPEC_VERSION: 0.0.2
+  ROCKSPEC_VERSION: 0.0.3
   DEV_ROCKSPEC: lua-hash-dev-1.rockspec
 
 jobs:
