@@ -701,7 +701,7 @@ static int lua_hash_digest_update(lua_State *L)
         }
 
         unsigned int size = (unsigned int)table_size;
-        unsigned char *buffer = (unsigned char *)malloc(size);
+        unsigned char *buffer = (unsigned char *)malloc(size * sizeof(unsigned char));
 
         if (buffer == NULL)
         {
@@ -800,7 +800,7 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
 
 static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *info, int return_hex)
 {
-    void *buffer = malloc(info->algo->digest_length);
+    void *buffer = malloc(info->algo->digest_length * sizeof(unsigned char));
     if (buffer == NULL)
     {
         luaL_error(L, "Failed to allocate memory for the digest output");
@@ -812,7 +812,7 @@ static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *in
     if (return_hex)
     {
         size_t hex_string_len = 2 * info->algo->digest_length;
-        char *hex_string = (char *)(malloc(hex_string_len + 1));
+        char *hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
         if (hex_string == NULL)
         {
             luaL_error(L, "Failed to allocate memory for the digest");
@@ -871,7 +871,7 @@ static int lua_hash_digest_finalize(lua_State *L)
                 /* remove return_type from stack */
                 lua_pop(L, 1);
 
-                void *buffer = malloc(info.algo->digest_length);
+                void *buffer = malloc(info.algo->digest_length * sizeof(unsigned char));
                 if (buffer == NULL)
                 {
                     luaL_error(L, "Failed to allocate memory for the digest output");
@@ -1133,7 +1133,7 @@ static int lua_hash_oneshot(lua_State *L)
     /* end of digest update */
 
     /* begin of digest finalize */
-    void *output_buffer = malloc(digest_length);
+    void *output_buffer = malloc(digest_length * sizeof(unsigned char));
     if (output_buffer == NULL)
     {
         luaL_error(L, "Failed to allocate memory for the digest output");
@@ -1204,7 +1204,7 @@ static int lua_hash_oneshot(lua_State *L)
     ** to a hex-string
     */
     size_t hex_string_len = 2 * digest_length;
-    char *hex_string = (char *)(malloc(hex_string_len + 1));
+    char *hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
     if (hex_string == NULL)
     {
         luaL_error(L, "Failed to allocate memory for the digest");
