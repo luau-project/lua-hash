@@ -723,7 +723,9 @@ static int lua_hash_digest_update(lua_State *L)
             else
             {
                 free((void *)buffer);
-                luaL_error(L, "value [%I] at index %I is out of 0 - 255 range", value, i);
+                char errMsg[100];
+                sprintf(errMsg, "value at table index %u is out of 0 - 255 range", (unsigned int)i);
+                luaL_error(L, errMsg);
             }
 
             i++;
