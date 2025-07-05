@@ -27,30 +27,32 @@ SOFTWARE.
 
 #include <lua.h>
 
+#ifndef LUA_HASH_EXPORT
 #ifdef LUA_HASH_BUILD_STATIC
 #define LUA_HASH_EXPORT
 #else
-#ifdef LUA_HASH_BUILD_SHARED /* { */
-#if defined(_WIN32) /* { */
-#if defined(__GNUC__) || defined(__MINGW32__) /* { */
+#ifdef LUA_HASH_BUILD_SHARED
+#if defined(_WIN32)
+#if defined(__GNUC__) || defined(__MINGW32__)
 #define LUA_HASH_EXPORT __attribute__((dllexport))
-#else /* }{ */
+#else
 #define LUA_HASH_EXPORT __declspec(dllexport)
-#endif /* } */
-#else /* }{ */
+#endif
+#else
 #define LUA_HASH_EXPORT __attribute__((visibility("default")))
-#endif /* } */
-#else /* }{ */
-#if defined(_WIN32) /* { */
-#if defined(__GNUC__) || defined(__MINGW32__) /* { */
+#endif
+#else
+#if defined(_WIN32)
+#if defined(__GNUC__) || defined(__MINGW32__)
 #define LUA_HASH_EXPORT __attribute__((dllimport))
-#else /* }{ */
+#else
 #define LUA_HASH_EXPORT __declspec(dllimport)
-#endif /* } */
-#else /* }{ */
+#endif
+#else
 #define LUA_HASH_EXPORT
-#endif /* } */
-#endif /* } */
+#endif
+#endif
+#endif
 #endif
 
 #ifdef __cplusplus
