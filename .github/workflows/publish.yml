@@ -32,18 +32,18 @@ jobs:
           }
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: lua-hash
           ref: ${{ github.ref }}
 
       - name: Setup Lua
-        uses: luarocks/gh-actions-lua@v11
+        uses: luarocks/gh-actions-lua@989f8e6ffba55ce1817e236478c98558e598776c # v11
         with:
           buildCache: false
 
       - name: Setup LuaRocks
-        uses: luarocks/gh-actions-luarocks@v6
+        uses: luarocks/gh-actions-luarocks@7c85eeff60655651b444126f2a78be784e836a0a # v6
 
       - name: Make sure that tags from GitHub and rockspec are equal
         run: |
