@@ -477,7 +477,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      LUAROCKS_VERSION: 3.11.1
+      LUAROCKS_VERSION: 3.12.2
       CYGWIN_NOWINPATH: 1
       CHERE_INVOKING: 1
       CYGWIN_INSTALL_DIR: C:\cygwin64
@@ -512,7 +512,6 @@ jobs:
             wget,
             gcc-g++,
             make,
-            patch,
             lua,
             liblua-devel,
             unzip,
@@ -528,62 +527,6 @@ jobs:
           Add-Content "${{ github.env }}" "CYGWIN_BASH=${bash}";
           Add-Content "${{ github.env }}" "CYGWIN_CYGPATH=${cygpath}";
 
-      - name: Create a patch to apply to LuaRocks tarball
-        run: |
-          $cygwin_patch = "diff -Naur a/GNUmakefile b/GNUmakefile",                                                             
-          "--- a/GNUmakefile    2024-05-31 14:38:00.000000000 -0300",                                           
-          "+++ b/GNUmakefile    2025-02-05 18:48:47.060175879 -0300",                                           
-          "@@ -8,7 +8,7 @@",                                                                                    
-          " INSTALL_DATA = `$(INSTALL) -m 644",                                                                 
-          " BINARY_PLATFORM = unix",                                                                            
-          " ",                                                                                                  
-          "-SHEBANG = \#!`$(LUA)",                                                                              
-          "+SHEBANG = \#!/bin/env lua",                                                                         
-          " luarocksconfdir = `$(sysconfdir)/luarocks",                                                         
-          " luadir = `$(datarootdir)/lua/`$(LUA_VERSION)",                                                      
-          " builddir = ./build",                                                                                
-          "diff -Naur a/src/luarocks/core/cfg.lua b/src/luarocks/core/cfg.lua",                                 
-          "--- a/src/luarocks/core/cfg.lua  2024-05-31 14:38:00.000000000 -0300",                               
-          "+++ b/src/luarocks/core/cfg.lua  2025-02-05 18:46:26.771098947 -0300",                               
-          "@@ -413,13 +413,24 @@",                                                                              
-          "    end",                                                                                            
-          " ",                                                                                                  
-          "    if platforms.cygwin then",                                                                       
-          "-      defaults.lib_extension = ""so"" -- can be overridden in the config file for mingw builds",    
-          "+      defaults.lib_extension = ""dll"" -- can be overridden in the config file for mingw builds",   
-          "       defaults.arch = ""cygwin-""..target_cpu",                                                     
-          "       defaults.cmake_generator = ""Unix Makefiles""",                                               
-          "       defaults.variables.CC = ""echo -llua | xargs "" .. (os.getenv(""CC"") or ""gcc"")",           
-          "       defaults.variables.LD = ""echo -llua | xargs "" .. (os.getenv(""CC"") or ""gcc"")",           
-          "       defaults.variables.LIBFLAG = ""-shared""",                                                    
-          "       defaults.link_lua_explicitly = true",                                                         
-          "+      defaults.external_deps_patterns = {",                                                         
-          "+         bin = { ""?.exe"", ""?.bat"", ""?"" },",                                                   
-          "+         lib = { ""lib?.so"", ""lib?.so.*"", ""lib?.dll.a"", ""?.dll.a"",",                         
-          "+                 ""lib?.a"", ""lib?.dll"", ""?.dll"", ""?.lib"" },",                                
-          "+         include = { ""?.h"" }",                                                                    
-          "+      }",                                                                                           
-          "+      defaults.runtime_external_deps_patterns = {",                                                 
-          "+         bin = { ""?.exe"", ""?.bat"" },",                                                          
-          "+         lib = { ""lib?.so"", ""?.dll"", ""lib?.dll"" },",                                          
-          "+         include = { ""?.h"" }",                                                                    
-          "+      }",                                                                                           
-          "    end",                                                                                            
-          " ",                                                                                                  
-          "    if platforms.msys then",                                                                         
-          "";
-
-          $cygwin_patch_content = $cygwin_patch |
-            Join-String -Separator "`n";
-
-          $patch_path = Join-Path -Path "${{ runner.temp }}" -ChildPath "cygwin-luarocks-3.11.1.patch";
-
-          Set-Content $patch_path $cygwin_patch_content -NoNewline;
-
-          $cygwinpath_for_patch = ${{ env.CYGWIN_CYGPATH }} $patch_path;
-          Add-Content "${{ github.env }}" "CYGWIN_PATCH_FILENAME=${cygwinpath_for_patch}";
-          Add-Content "${{ github.env }}" "PWSH_CYGWIN_PATCH_FILENAME=${patch_path}";
-
       - name: Download, configure and install LuaRocks
         run: |
           $color = (0x1b -as [char]) + "[36m";
@@ -594,15 +537,8 @@ jobs:
           Write-Host "Extracting LuaRocks tarball: ${color}/tmp/luarocks-${{ env.LUAROCKS_VERSION }}.tar.gz";
           ${{ env.CYGWIN_BASH }} -lc "tar -C /tmp -xf /tmp/luarocks-${{ env.LUAROCKS_VERSION }}.tar.gz";
 
-          Write-Host "Patching LuaRocks with ${color}${{ env.CYGWIN_PATCH_FILENAME }}";
-          Write-Host "    which has the following content:";
-
-          $color_patch_content = (0x1b -as [char]) + "[33m";
-          Get-Content "${{ env.PWSH_CYGWIN_PATCH_FILENAME }}" | ForEach-Object { Write-Host "${color_patch_content}$_"; }
-          ${{ env.CYGWIN_BASH }} -lc "cd /tmp/luarocks-${{ env.LUAROCKS_VERSION }} && patch -Np1 -i ""${{ env.CYGWIN_PATCH_FILENAME }}""";
-
           Write-Host "Configuring, making and installing LuaRocks at ${color}/usr";
-          ${{ env.CYGWIN_BASH }} -lc "cd /tmp/luarocks-${{ env.LUAROCKS_VERSION }} && ./configure --prefix=/usr && make && make install";
+          ${{ env.CYGWIN_BASH }} -lc "cd /tmp/luarocks-${{ env.LUAROCKS_VERSION }} && ./configure --prefix=/usr && make SHEBANG='#!env lua' && make install";
 
           Write-Host "Writing a shell entry loading LuaRocks variables to file: ${color}/etc/profile.d/luarocks.sh";
           ${{ env.CYGWIN_BASH }} -lc "echo 'eval `$(luarocks path)' > /etc/profile.d/luarocks.sh";
