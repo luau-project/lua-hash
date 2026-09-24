@@ -88,6 +88,7 @@ SAMPLES_TEST_DEFAULT = $(SAMPLESDIR)$(DIRSEP)test-table.lua
 SAMPLES_TEST_STRING_NO_HEX = $(SAMPLESDIR)$(DIRSEP)test-string-no-hex.lua
 SAMPLES_TEST_ONESHOT = $(SAMPLESDIR)$(DIRSEP)test-oneshot.lua
 SAMPLES_TEST_STRING_HEX = $(SAMPLESDIR)$(DIRSEP)test-string-hex.lua
+SAMPLES_TEST_VERSION = $(SAMPLESDIR)$(DIRSEP)test-version.lua
 
 CC = cc
 CCONLY = -c
@@ -162,7 +163,7 @@ install: create-install-dir
 uninstall:
 	-$(RM) $(RMFLAGS) $(OPENARGDELIMITER)$(INSTALL_CMOD)$(DIRSEP)$(OUTBASENAME)$(CLOSEARGDELIMITER)
 
-test: test-table test-default test-string-no-hex test-oneshot test-string-hex
+test: test-table test-default test-string-no-hex test-oneshot test-string-hex test-version
 
 test-table: $(SAMPLES_TEST_TABLE)
 	$(LUA) $(SAMPLES_TEST_TABLE)
@@ -178,6 +179,9 @@ test-oneshot: $(SAMPLES_TEST_ONESHOT)
 
 test-string-hex: $(SAMPLES_TEST_STRING_HEX)
 	$(LUA) $(SAMPLES_TEST_STRING_HEX)
+
+test-version: $(SAMPLES_TEST_VERSION)
+	$(LUA) $(SAMPLES_TEST_VERSION)
 
 luarocks-install-dev: $(DEV_ROCKSPEC)
 	$(LUAROCKS) make $(LUAROCKS_MAKE_ARGS) $(DEV_ROCKSPEC)
