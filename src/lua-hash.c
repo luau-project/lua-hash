@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2025 luau-project [https://github.com/luau-project/lua-hash](https://github.com/luau-project/lua-hash)
+Copyright (c) 2025 - 2026 luau-project https://github.com/luau-project/lua-hash
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -138,7 +138,7 @@ typedef struct tagLuaHashAlgorithmEntry
 #elif defined(LUA_HASH_USE_OPENSSL)
     /* nothing */
 #endif
-    
+
 } LuaHashAlgorithmEntry;
 
 typedef struct tagLuaHashAlgorithm
@@ -255,7 +255,7 @@ static int lua_hash_algorithm_open(lua_State *L)
 
 #if defined(LUA_HASH_USE_WIN32)
     NTSTATUS status;
-    
+
     status = BCryptOpenAlgorithmProvider(
         &(algo->algorithm_handle),
         lua_hash_algorithms[entry_index].implementation,
@@ -289,7 +289,7 @@ static int lua_hash_algorithm_open(lua_State *L)
     algo->digest_length = (size_t)hashSize;
 
 #elif defined(LUA_HASH_USE_APPLE)
-    
+
     algo->ctx_size = lua_hash_algorithms[entry_index].ctx_size;
     algo->init_fn = lua_hash_algorithms[entry_index].init_fn;
     algo->update_fn = lua_hash_algorithms[entry_index].update_fn;
@@ -316,7 +316,7 @@ static int lua_hash_algorithm_open(lua_State *L)
 
     algo->digest_length = (size_t)(EVP_MD_size(algo->algorithm_handle));
 #endif
-    
+
     algo->is_open = 1;
     algo->id = lua_hash_algorithms[entry_index].id;
 
@@ -413,7 +413,7 @@ static int lua_hash_digest_context_new(lua_State *L)
     lua_setmetatable(L, -2);
 
     LuaDigestContext *ctx = (LuaDigestContext *)ud;
-    
+
 #if defined(LUA_HASH_USE_WIN32)
     NTSTATUS status = BCryptCreateHash(
         algo->algorithm_handle,
@@ -455,7 +455,7 @@ static int lua_hash_digest_context_new(lua_State *L)
 static int lua_hash_digest_context_close(lua_State *L)
 {
     LuaDigestContext *ctx = lua_hash_digest_context_check(L, 1);
-    
+
     if (ctx->is_open)
     {
 
@@ -575,7 +575,7 @@ typedef struct tagLuaDigestInfo
     LuaHashAlgorithm *algo;
     LuaDigestContext *ctx;
     LuaDigest *digest;
-    
+
 } LuaDigestInfo;
 
 static void lua_hash_digest_validate(lua_State *L, LuaDigestInfo *info)
@@ -728,7 +728,7 @@ static int lua_hash_digest_update(lua_State *L)
 
             i++;
         }
-        
+
         /* #5 argument == 1 allows the buffer to be freed */
         lua_hash_digest_update_core(L, buffer, (size_t)size, &info, 1);
     }
@@ -753,7 +753,7 @@ static int lua_hash_digest_update(lua_State *L)
 static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestInfo *info, int free_buffer)
 {
 #if defined(LUA_HASH_USE_WIN32)
-    
+
     NTSTATUS status = BCryptFinishHash(
         info->ctx->ctx_handle,
         (PUCHAR)buffer,
@@ -771,7 +771,7 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
-            
+
     if (!info->algo->final_fn((unsigned char *)buffer, info->ctx->ctx_handle))
     {
         if (free_buffer)
@@ -782,7 +782,7 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
-            
+
     unsigned int len = 0;
     if (!EVP_DigestFinal(info->ctx->ctx_handle, (unsigned char *)buffer, &len))
     {
@@ -803,7 +803,7 @@ static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *in
     {
         luaL_error(L, "Failed to allocate memory for the digest output");
     }
-    
+
     /* #4 argument == 1 allows the buffer to be freed */
     lua_hash_digest_finalize_core(L, buffer, info, 1);
 
@@ -848,7 +848,7 @@ static int lua_hash_digest_finalize(lua_State *L)
     {
         lua_pushstring(L, "type");
         lua_gettable(L, 2);
-        
+
         if (lua_isstring(L, -1))
         {
             const char *return_type = lua_tostring(L, -1);
@@ -858,7 +858,7 @@ static int lua_hash_digest_finalize(lua_State *L)
                 lua_pushstring(L, "hex");
                 lua_gettable(L, 2);
                 int return_hex = lua_toboolean(L, -1);
-                
+
                 /* remove both return_type and return_hex from stack */
                 lua_pop(L, 2);
 
@@ -874,7 +874,7 @@ static int lua_hash_digest_finalize(lua_State *L)
                 {
                     luaL_error(L, "Failed to allocate memory for the digest output");
                 }
-                
+
                 /* #4 argument == 1 allows the buffer to be freed */
                 lua_hash_digest_finalize_core(L, buffer, &info, 1);
 
@@ -882,7 +882,7 @@ static int lua_hash_digest_finalize(lua_State *L)
 
                 unsigned char *buffer_cast = (unsigned char *)buffer;
 
-                for (int i = 1; i <= info.algo->digest_length; i++)
+                for (int i = 1; i <= ((int)info.algo->digest_length); i++)
                 {
                     lua_pushinteger(L, i);
                     lua_pushinteger(L, 0xFF & (buffer_cast[i - 1]));
@@ -954,7 +954,7 @@ static int lua_hash_oneshot(lua_State *L)
 #if defined(LUA_HASH_USE_WIN32)
     BCRYPT_ALG_HANDLE algorithm_handle;
     NTSTATUS status;
-    
+
     status = BCryptOpenAlgorithmProvider(
         &algorithm_handle,
         lua_hash_algorithms[entry_index].implementation,
@@ -992,7 +992,7 @@ static int lua_hash_oneshot(lua_State *L)
     LuaDigestInit init_fn;
     LuaDigestUpdate update_fn;
     LuaDigestFinal final_fn;
-    
+
     ctx_size = lua_hash_algorithms[entry_index].ctx_size;
     init_fn = lua_hash_algorithms[entry_index].init_fn;
     update_fn = lua_hash_algorithms[entry_index].update_fn;
@@ -1026,7 +1026,7 @@ static int lua_hash_oneshot(lua_State *L)
 #if defined(LUA_HASH_USE_WIN32)
     /* digest handle */
     BCRYPT_HASH_HANDLE ctx_handle;
-    
+
     status = BCryptCreateHash(
         algorithm_handle,
         &ctx_handle,
@@ -1137,7 +1137,7 @@ static int lua_hash_oneshot(lua_State *L)
     }
 
 #if defined(LUA_HASH_USE_WIN32)
-    
+
     status = BCryptFinishHash(
         ctx_handle,
         (PUCHAR)output_buffer,
@@ -1163,7 +1163,7 @@ static int lua_hash_oneshot(lua_State *L)
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
-            
+
     unsigned int len = 0;
     if (!EVP_DigestFinal(ctx_handle, (unsigned char *)output_buffer, &len))
     {
@@ -1316,6 +1316,10 @@ LUA_HASH_EXPORT int luaopen_hash(lua_State *L)
     lua_settable(L, -3);
 
     /* hash lib */
+    lua_pushstring(L, "version");
+    lua_pushstring(L, LUA_HASH_VERSION);
+    lua_settable(L, -3);
+
     lua_pushstring(L, "oneshot");
     lua_pushcfunction(L, lua_hash_oneshot);
     lua_settable(L, -3);

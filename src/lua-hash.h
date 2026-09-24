@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2025 luau-project [https://github.com/luau-project/lua-hash](https://github.com/luau-project/lua-hash)
+Copyright (c) 2025 - 2026 luau-project https://github.com/luau-project/lua-hash
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@ SOFTWARE.
 #ifndef LUA_HASH_H
 #define LUA_HASH_H
 
+#define LUA_HASH_VERSION "0.1.0"
+
 #include <lua.h>
 
 #ifndef LUA_HASH_EXPORT
@@ -32,7 +34,7 @@ SOFTWARE.
 #define LUA_HASH_EXPORT
 #else
 #ifdef LUA_HASH_BUILD_SHARED
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
 #if defined(__GNUC__) || defined(__MINGW32__)
 #define LUA_HASH_EXPORT __attribute__((dllexport))
 #else
@@ -42,7 +44,7 @@ SOFTWARE.
 #define LUA_HASH_EXPORT __attribute__((visibility("default")))
 #endif
 #else
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
 #if defined(__GNUC__) || defined(__MINGW32__)
 #define LUA_HASH_EXPORT __attribute__((dllimport))
 #else
