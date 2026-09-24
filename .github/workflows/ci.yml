@@ -450,7 +450,10 @@ jobs:
             exit 1;
           }
 
-          ./configure --prefix=/usr && make SHEBANG='#!/bin/env lua' && make install || {
+          cd "/tmp/luarocks-${luarocks_version}" && \
+          ./configure --prefix=/usr && \
+          make SHEBANG='#!/bin/env lua' && \
+          make install || {
             echo "Failed to configure, build or install LuaRocks ${luarocks_version}";
             exit 1;
           }
