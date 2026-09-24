@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2025 luau-project [https://github.com/luau-project/lua-hash](https://github.com/luau-project/lua-hash)
+Copyright (c) 2025 - 2026 luau-project https://github.com/luau-project/lua-hash
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
