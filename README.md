@@ -1,18 +1,18 @@
 # lua-hash
 
-[![CI](https://github.com/luau-project/lua-hash/actions/workflows/ci.yml/badge.svg)](./.github/workflows/ci.yml) [![LuaRocks](https://img.shields.io/luarocks/v/luau-project/lua-hash?label=LuaRocks&color=2c3e67)](https://luarocks.org/modules/luau-project/lua-hash)
+[![LuaRocks](https://img.shields.io/luarocks/v/luau-project/lua-hash?label=LuaRocks&color=2c3e67)](https://luarocks.org/modules/luau-project/lua-hash) [![codecov](https://codecov.io/github/luau-project/lua-hash/graph/badge.svg?token=F65RG5RCNO)](https://codecov.io/github/luau-project/lua-hash)
 
 ## Overview
 
 **lua-hash** is a lightweight, native library providing hash algorithms for Lua.
 
 * On Unix-like distributions, it uses the [OpenSSL](https://www.openssl.org/) library;
-* On Windows, it uses the WINAPI ```bcrypt``` library;
-* On macOS / iOS, it uses the ```CommonCrypto``` library.
+* On Windows, it uses the WINAPI `bcrypt` library;
+* On macOS / iOS, it uses the `CommonCrypto` library.
 
 > [!NOTE]
 > 
-> ```lua-hash``` is implemented in C, and also compiles as C++.
+> `lua-hash` is implemented in C, and also compiles as C++.
 
 ## Supported Algorithms
 
@@ -32,6 +32,8 @@
 
 * [Installation](#installation)
 * [Usage](#usage)
+* [Constants](#constants)
+    * [version](#version)
 * [Methods](#methods)
     * [oneshot](#oneshot)
 * [Classes](#classes)
@@ -45,14 +47,13 @@
         * [new](#new-1)
         * [update](#update)
         * [finalize](#finalize)
-* [Change log](#change-log)
-* [Future works](#future-works)
+* [History](#history)
 
 ## Installation
 
 > [!IMPORTANT]
 > 
-> On Unix-like operating systems (e.g.: Linux, BSD),  ```lua-hash``` depends on the ```OpenSSL``` library:
+> On Unix-like operating systems (e.g.: Linux, BSD),  `lua-hash` depends on the `OpenSSL` library:
 >  * On Debian-based (e.g.: Ubuntu) distributions:
 > 
 >      ```bash
@@ -71,13 +72,28 @@
 >      pkg install openssl-devel
 >      ```
 
-Assuming that [LuaRocks](https://luarocks.org) is properly installed and configured on your system, execute the following command:
+Assuming that [LuaRocks](https://luarocks.org) is properly installed and configured in the system, execute the following command:
 
 ```bash
 luarocks install lua-hash
 ```
 
+In case `LuaRocks` is not an option, check the guides:
+
+* [Build on Windows](./BUILDING-WINDOWS.md) or
+* [Build on Unix](./BUILDING-UNIX.md).
+
 ## Usage
+
+### Print the version of this library
+
+```lua
+-- load the library
+local hash = require("lua-hash")
+
+-- print the version
+print(hash.version)
+```
 
 ### Compute hash of a text on memory
 
@@ -176,16 +192,24 @@ algo:close()
 > 
 > In the [checksums](./checksums/README.md#computing-file-checksums) folder, you can find scripts for each available hashing algorithm on this library.
 
+## Constants
+
+### version
+
+* *Description*: The version of this `lua-hash` library.
+* *Signature*: `version`
+* *Return* (`string`): A string containing the version of this `lua-hash` library.
+
 ## Methods
 
 ### oneshot
 
 * *Description*: The oneshot function provides a quick manner to compute the hash of a text held in memory.
-* *Signature*: ```oneshot(name, text)```
+* *Signature*: `oneshot(name, text)`
 * *Parameters*:
-    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list containing the possible values for this parameter.  
-    * *text* (```string```): the text to compute a hash.
-* *Return* (```string```): A hex string containing the hash of the text.
+    * *name* (`string`): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list containing the possible values for this parameter.
+    * *text* (`string`): the text to compute a hash.
+* *Return* (`string`): A hex string containing the hash of the text.
 
 ## Classes
 
@@ -202,19 +226,19 @@ Implementation of a hash algorithm provided by the underlying library.
 #### open
 
 * *Description*: Opens the implementation of a given hash algorithm and initializes resources.
-* *Signature*: ```open(name)```
+* *Signature*: `open(name)`
 * *Parameters*:
-    * *name* (```string```): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list of all the possible algorithms.
+    * *name* (`string`): the name of the algorithm. See [Supported Algorithms](#supported-algorithms) for a list of all the possible algorithms.
 
-* *Return* (```userdata```): A handle to the hash algorithm.
-* *Remark*: In case of failure, this function throws an error. It might happen if the underlying library does not support the hash algorithm identified by the```name``` parameter.
+* *Return* (`userdata`): A handle to the hash algorithm.
+* *Remark*: In case of failure, this function throws an error. It might happen if the underlying library does not support the hash algorithm identified by the `name` parameter.
 
 #### close
 
 * *Description*: Closes the algorithm and free resources.
-* *Signature*: ```instance:close()```
-    * *instance* (```userdata```): an instance of the [algorithm](#algorithm) class
-* *Return* (```void```)
+* *Signature*: `instance:close()`
+    * *instance* (`userdata`): an instance of the [algorithm](#algorithm) class
+* *Return* (`void`)
 
 ### context
 
@@ -223,18 +247,18 @@ A manager to process a digest associated to a given hash algorithm
 #### new
 
 * *Description*: Creates a new context to the provided algorithm, and initializes resources.
-* *Signature*: ```new(algorithm)```
+* *Signature*: `new(algorithm)`
 * *Parameters*:
-    * *algorithm* (```userdata```): an instance to an algorithm previously opened.
-* *Return* (```userdata```): A handle to the newly created context.
+    * *algorithm* (`userdata`): an instance to an algorithm previously opened.
+* *Return* (`userdata`): A handle to the newly created context.
 * *Remark*: In case of failure, this function throws an error. It might happen if the provided hashing algorithm is closed.
 
 #### close
 
 * *Description*: Closes the context and free resources.
-* *Signature*: ```instance:close()```
-    * *instance* (```userdata```): an instance of the [context](#context) class
-* *Return* (```void```)
+* *Signature*: `instance:close()`
+    * *instance* (`userdata`): an instance of the [context](#context) class
+* *Return* (`void`)
 
 ### digest
 
@@ -243,29 +267,29 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
 #### new
 
 * *Description*: Creates a new digest bound to a context, and initializes resources. 
-* *Signature*: ```new(ctx)```
+* *Signature*: `new(ctx)`
 * *Parameters*:
-    * *ctx* (```userdata```): an instance of a ```context```.
-* *Return* (```userdata```): A handle to the newly created digest.
+    * *ctx* (`userdata`): an instance of a `context`.
+* *Return* (`userdata`): A handle to the newly created digest.
 * *Remark*: In case of failure, this function throws an error. It might happen if the provided context, or algorithm bound to the context, was closed.
 
 #### update
 
 * *Description*: Hashes the data into the context.
-* *Signature*: ```message:update(data)```
-    * *message* (```userdata```): an instance of the [digest](#digest) class
+* *Signature*: `message:update(data)`
+    * *message* (`userdata`): an instance of the [digest](#digest) class
 * *Parameters*:
-    * *data* (```string | table```): the data to be hashed into the context. If ```data``` is a string, the only requirement is that it cannot be an empty string. Otherwise, when ```data``` is a table, it is expected to be an array of bytes, i.e., elements are integers in 0 - 255 range.
-* *Return* (```void```)
+    * *data* (`string | table`): the data to be hashed into the context. If `data` is a string, the only requirement is that it cannot be an empty string. Otherwise, when `data` is a table, it is expected to be an array of bytes, i.e., elements are integers in 0 - 255 range.
+* *Return* (`void`)
 * *Remark*: In case of failure, this function throws an error. It might happen if the provided context, or algorithm bound to the context, was closed.
 
 #### finalize
 
 * *Description*: Retrieves the digest value from the context.
-* *Signature*: ```message:finalize(options)```
-    * *message* (```userdata```): an instance of the [digest](#digest) class
+* *Signature*: `message:finalize(options)`
+    * *message* (`userdata`): an instance of the [digest](#digest) class
 * *Parameters*:
-    * *options* (```nil | table```): when ```options``` is nil or not specified at all, a hex string is returned. Otherwise, when ```options``` is a table, it is mandatory to have a field ```type``` describing the desired return type ('string' or 'table'). Moreover, when ```type``` is equal to ```'string'```, an optional boolean field ```hex``` can be assigned to signal whether the resulting hash should be formatted as hex string or not.
+    * *options* (`nil | table`): when `options` is nil or not specified at all, a hex string is returned. Otherwise, when `options` is a table, it is mandatory to have a field `type` describing the desired return type ('string' or 'table'). Moreover, when `type` is equal to `'string'`, an optional boolean field `hex` can be assigned to signal whether the resulting hash should be formatted as hex string or not.
         * *examples*:
             * output a hex string:
                 ```lua
@@ -297,25 +321,11 @@ Allows a message, even the long ones, to be streamed in chunks to the underlying
                 -- each element falls in the 0 - 255 range
                 local output = message:finalize({ type = 'table' })
                 ```
-* *Return* (```string | table```): the resulting hash of the whole set of bytes pushed into the context.
+* *Return* (`string | table`): the resulting hash of the whole set of bytes pushed into the context.
 * *Remark*:
     * After calling this function, no additional usage of both the context and digest can be made, except for closing them and freeing resources.
     * In case of failure, this function throws an error. It might happen if the provided context, or algorithm bound to the context, was closed.
 
-## Change log
+## History
 
-* v0.0.3:
-    * Fixed an invalid error message, which would crash on Lua 5.1 and Lua 5.2, when a table of bytes was provided with numbers out of 0 - 255 range. In-depth explanation: `%I%` flag on `luaL_error` is only allowed on Lua 5.3 or newer;
-    * Updated malloc calls to account for `sizeof(char)` and `sizeof(unsigned char)`;
-    * Through CI, the library is also verified to work correctly on ARM64;
-    * GitHub actions were pinned by commit id to avoid supply-chain attacks;
-    * Rockspec upload now lives on its own [publish.yml](./.github/workflows/publish.yml) workflow. This has the goal to avoid manual upload in case of intermitent failures (e.g.: connection issues or unavailable services). In the new publish behavior, the repository owner must trigger upload manually on GitHub for the rockspec to be published on LuaRocks website.
-* v0.0.2:
-    * Added the possibility for all Unix-like distributions to build and install ```lua-hash``` using the binding for ```OpenSSL```;
-    * Added a CI job to build and test ```lua-hash``` on [Cygwin](https://www.cygwin.com/);
-    * Now, as a Unix-like distribution, Cygwin builds as a Unix distro. Thus, in order to build on Cygwin, you need to install the package ```libssl-devel```.
-* v0.0.1: Initial release.
-
-## Future works
-
-* Add CMake as a build system.
+Browse the [CHANGELOG](./CHANGELOG.md)
