@@ -53,6 +53,8 @@
 
 > [!IMPORTANT]
 > 
+> On Windows or macOS, there is no need to install anything, because the operating system provides the necessary libraries.
+> 
 > On Unix-like operating systems (e.g.: Linux, BSD),  `lua-hash` depends on the `OpenSSL` library:
 >  * On Debian-based (e.g.: Ubuntu) distributions:
 > 
