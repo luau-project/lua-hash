@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef LUA_HASH_H
 #define LUA_HASH_H
 
-#define LUA_HASH_VERSION "0.1.0"
+#define LUA_HASH_VERSION "0.1.1"
 
 #include <lua.h>
 

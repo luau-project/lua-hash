@@ -39,6 +39,11 @@ SOFTWARE.
 #elif defined(LUA_HASH_USE_OPENSSL)
 #include <openssl/opensslv.h>
 #include <openssl/evp.h>
+#else
+#error "Unknown configuration to build lua-hash. \
+        Please, compile with `-DLUA_HASH_USE_WIN32`, \
+        `-DLUA_HASH_USE_OPENSSL` or \
+        `-DLUA_HASH_USE_APPLE`"
 #endif
 
 #include <stdlib.h>
@@ -232,30 +237,41 @@ static LuaHashAlgorithm *lua_hash_algorithm_check(lua_State *L, int index)
 
 static int lua_hash_algorithm_open(lua_State *L)
 {
+    /* variable definitions */
+#if defined(LUA_HASH_USE_WIN32)
+    NTSTATUS status;
+    ULONG hashSize;
+    ULONG copiedCount;
+#elif defined(LUA_HASH_USE_APPLE)
+    /* nothing */
+#elif defined(LUA_HASH_USE_OPENSSL)
+    /* nothing */
+#endif
+
+    void *ud;
+    LuaHashAlgorithm *algo;
     const char *name = luaL_checkstring(L, 1);
     int entry_index = lua_hash_algorithm_find_index(name);
 
     if (entry_index == -1)
     {
-        luaL_error(L, "hash algorithm not found");
+        return luaL_error(L, "hash algorithm not found");
     }
 
-    void *ud = lua_newuserdata(L, sizeof(LuaHashAlgorithm));
+    ud = lua_newuserdata(L, sizeof(LuaHashAlgorithm));
     if (ud == NULL)
     {
-        luaL_error(L, "Failed to create hash algorithm userdata");
+        return luaL_error(L, "Failed to create hash algorithm userdata");
     }
 
     luaL_getmetatable(L, LUA_HASH_ALGORITHM_METATABLE);
     lua_setmetatable(L, -2);
 
-    LuaHashAlgorithm *algo = (LuaHashAlgorithm *)ud;
+    algo = (LuaHashAlgorithm *)ud;
 
     algo->is_open = 0;
 
 #if defined(LUA_HASH_USE_WIN32)
-    NTSTATUS status;
-
     status = BCryptOpenAlgorithmProvider(
         &(algo->algorithm_handle),
         lua_hash_algorithms[entry_index].implementation,
@@ -265,11 +281,11 @@ static int lua_hash_algorithm_open(lua_State *L)
 
     if (status != STATUS_SUCCESS)
     {
-        luaL_error(L, "Error opening algorithm provider through BCryptOpenAlgorithmProvider. Most likely, it is unsupported by the underlying bcrypt library.");
+        return luaL_error(L, "Error opening algorithm provider through BCryptOpenAlgorithmProvider. Most likely, it is unsupported by the underlying bcrypt library.");
     }
 
-    ULONG hashSize = 0;
-    ULONG copiedCount = 0;
+    hashSize = 0;
+    copiedCount = 0;
 
     status = BCryptGetProperty(
         algo->algorithm_handle,
@@ -283,7 +299,7 @@ static int lua_hash_algorithm_open(lua_State *L)
     if (status != STATUS_SUCCESS)
     {
         BCryptCloseAlgorithmProvider(algo->algorithm_handle, 0);
-        luaL_error(L, "Failed to get the digest length in bytes through BCryptGetProperty.");
+        return luaL_error(L, "Failed to get the digest length in bytes through BCryptGetProperty.");
     }
 
     algo->digest_length = (size_t)hashSize;
@@ -303,14 +319,14 @@ static int lua_hash_algorithm_open(lua_State *L)
 
     if (algo->algorithm_handle == NULL)
     {
-        luaL_error(L, "Error opening algorithm provider through EVP_MD_fetch. Most likely, it is unsupported by the underlying OPENSSL library.");
+        return luaL_error(L, "Error opening algorithm provider through EVP_MD_fetch. Most likely, it is unsupported by the underlying OPENSSL library.");
     }
 #else
     algo->algorithm_handle = EVP_get_digestbyname(name);
 
     if (algo->algorithm_handle == NULL)
     {
-        luaL_error(L, "Error opening algorithm provider through EVP_get_digestbyname. Most likely, it is unsupported by the underlying OPENSSL library.");
+        return luaL_error(L, "Error opening algorithm provider through EVP_get_digestbyname. Most likely, it is unsupported by the underlying OPENSSL library.");
     }
 #endif
 
@@ -334,7 +350,7 @@ static int lua_hash_algorithm_close(lua_State *L)
         NTSTATUS status = BCryptCloseAlgorithmProvider(algo->algorithm_handle, 0);
         if (status != STATUS_SUCCESS)
         {
-            luaL_error(L, "Error closing algorithm provider");
+            return luaL_error(L, "Error closing algorithm provider");
         }
 
 #elif defined(LUA_HASH_USE_APPLE)
@@ -400,22 +416,33 @@ static LuaDigestContext *lua_hash_digest_context_check(lua_State *L, int index)
 
 static int lua_hash_digest_context_new(lua_State *L)
 {
+    /* variable definitions */
+#if defined(LUA_HASH_USE_WIN32)
+    NTSTATUS status;
+#elif defined(LUA_HASH_USE_APPLE)
+    /* nothing */
+#elif defined(LUA_HASH_USE_OPENSSL)
+    /* nothing */
+#endif
+
+    void *ud;
+    LuaDigestContext *ctx;
     LuaHashAlgorithm *algo = lua_hash_algorithm_check(L, 1);
     luaL_argcheck(L, algo->is_open, 1, "algorithm cannot be closed");
 
-    void *ud = lua_newuserdata(L, sizeof(LuaDigestContext));
+    ud = lua_newuserdata(L, sizeof(LuaDigestContext));
     if (ud == NULL)
     {
-        luaL_error(L, "Userdata creation for the digest context failed");
+        return luaL_error(L, "Userdata creation for the digest context failed");
     }
 
     luaL_getmetatable(L, LUA_HASH_DIGEST_CONTEXT_METATABLE);
     lua_setmetatable(L, -2);
 
-    LuaDigestContext *ctx = (LuaDigestContext *)ud;
+    ctx = (LuaDigestContext *)ud;
 
 #if defined(LUA_HASH_USE_WIN32)
-    NTSTATUS status = BCryptCreateHash(
+    status = BCryptCreateHash(
         algo->algorithm_handle,
         &(ctx->ctx_handle),
         NULL,
@@ -427,20 +454,20 @@ static int lua_hash_digest_context_new(lua_State *L)
 
     if (status != STATUS_SUCCESS)
     {
-        luaL_error(L, "Error creating context through BCryptCreateHash");
+        return luaL_error(L, "Error creating context through BCryptCreateHash");
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
     ctx->ctx_handle = malloc(algo->ctx_size);
     if (ctx->ctx_handle == NULL)
     {
-        luaL_error(L, "Memory allocation for the digest context failed");
+        return luaL_error(L, "Memory allocation for the digest context failed");
     }
 #elif defined(LUA_HASH_USE_OPENSSL)
     ctx->ctx_handle = EVP_MD_CTX_create();
     if (ctx->ctx_handle == NULL)
     {
-        luaL_error(L, "Memory allocation for the digest context failed");
+        return luaL_error(L, "Memory allocation for the digest context failed");
     }
 #endif
 
@@ -463,7 +490,7 @@ static int lua_hash_digest_context_close(lua_State *L)
         NTSTATUS status = BCryptDestroyHash(ctx->ctx_handle);
         if (status != STATUS_SUCCESS)
         {
-            luaL_error(L, "Error closing context through BCryptDestroyHash");
+            return luaL_error(L, "Error closing context through BCryptDestroyHash");
         }
 
 #elif defined(LUA_HASH_USE_APPLE)
@@ -513,22 +540,26 @@ static LuaDigest *lua_hash_digest_check(lua_State *L, int index)
 
 static int lua_hash_digest_new(lua_State *L)
 {
+    void *ud;
+    LuaDigest *digest;
+    void *ud_algo;
+    LuaHashAlgorithm *algo;
     LuaDigestContext *ctx = lua_hash_digest_context_check(L, 1);
     luaL_argcheck(L, ctx->is_open, 1, "digest context cannot be closed");
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->algo_ref);
-    void *ud_algo = luaL_checkudata(L, -1, LUA_HASH_ALGORITHM_METATABLE);
+    ud_algo = luaL_checkudata(L, -1, LUA_HASH_ALGORITHM_METATABLE);
     if (ud_algo == NULL)
     {
         lua_pop(L, 1);
-        luaL_error(L, "algorithm cannot be closed");
+        return luaL_error(L, "algorithm cannot be closed");
     }
 
-    LuaHashAlgorithm *algo = (LuaHashAlgorithm *)ud_algo;
+    algo = (LuaHashAlgorithm *)ud_algo;
     if (!algo->is_open)
     {
         lua_pop(L, 1);
-        luaL_error(L, "the algorithm bound to the context was closed");
+        return luaL_error(L, "the algorithm bound to the context was closed");
     }
 
 #if defined(LUA_HASH_USE_WIN32)
@@ -538,14 +569,14 @@ static int lua_hash_digest_new(lua_State *L)
     if (!algo->init_fn(ctx->ctx_handle))
     {
         lua_pop(L, 1);
-        luaL_error(L, "Error intializing digest through init");
+        return luaL_error(L, "Error intializing digest through init");
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
     if (!EVP_DigestInit(ctx->ctx_handle, algo->algorithm_handle))
     {
         lua_pop(L, 1);
-        luaL_error(L, "Error intializing digest through EVP_DigestInit");
+        return luaL_error(L, "Error intializing digest through EVP_DigestInit");
     }
 
 #endif
@@ -553,16 +584,16 @@ static int lua_hash_digest_new(lua_State *L)
     /* pop the algorithm from the stack*/
     lua_pop(L, 1);
 
-    void *ud = lua_newuserdata(L, sizeof(LuaDigest));
+    ud = lua_newuserdata(L, sizeof(LuaDigest));
     if (ud == NULL)
     {
-        luaL_error(L, "Userdata creation for the digest context failed");
+        return luaL_error(L, "Userdata creation for the digest context failed");
     }
 
     luaL_getmetatable(L, LUA_HASH_DIGEST_METATABLE);
     lua_setmetatable(L, -2);
 
-    LuaDigest *digest = (LuaDigest *)ud;
+    digest = (LuaDigest *)ud;
 
     lua_pushvalue(L, 1);
     digest->ctx_ref = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -580,22 +611,28 @@ typedef struct tagLuaDigestInfo
 
 static void lua_hash_digest_validate(lua_State *L, LuaDigestInfo *info)
 {
+    LuaDigest *digest;
+    void *ud_ctx;
+    LuaDigestContext *ctx;
+    void *ud_algo;
+    LuaHashAlgorithm *algo;
+
     if (info == NULL)
     {
         luaL_error(L, "Internal error: LuaDigestInfo is null");
     }
 
-    LuaDigest *digest = lua_hash_digest_check(L, 1);
+    digest = lua_hash_digest_check(L, 1);
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, digest->ctx_ref);
-    void *ud_ctx = luaL_checkudata(L, -1, LUA_HASH_DIGEST_CONTEXT_METATABLE);
+    ud_ctx = luaL_checkudata(L, -1, LUA_HASH_DIGEST_CONTEXT_METATABLE);
     if (ud_ctx == NULL)
     {
         lua_pop(L, 1);
         luaL_error(L, "context cannot be closed");
     }
 
-    LuaDigestContext *ctx = (LuaDigestContext *)ud_ctx;
+    ctx = (LuaDigestContext *)ud_ctx;
     if (!ctx->is_open)
     {
         lua_pop(L, 1);
@@ -609,14 +646,14 @@ static void lua_hash_digest_validate(lua_State *L, LuaDigestInfo *info)
     }
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->algo_ref);
-    void *ud_algo = luaL_checkudata(L, -1, LUA_HASH_ALGORITHM_METATABLE);
+    ud_algo = luaL_checkudata(L, -1, LUA_HASH_ALGORITHM_METATABLE);
     if (ud_algo == NULL)
     {
         lua_pop(L, 2);
         luaL_error(L, "algorithm cannot be closed");
     }
 
-    LuaHashAlgorithm *algo = (LuaHashAlgorithm *)ud_algo;
+    algo = (LuaHashAlgorithm *)ud_algo;
     if (!algo->is_open)
     {
         lua_pop(L, 2);
@@ -677,41 +714,48 @@ static void lua_hash_digest_update_core(lua_State *L, unsigned char *buffer, siz
 
 static int lua_hash_digest_update(lua_State *L)
 {
+    unsigned int size;
+    unsigned char *buffer;
+    lua_Integer i;
+    lua_Integer value;
+    lua_Integer table_size;
+    size_t str_size;
+    const char *data;
+    char errMsg[100];
     LuaDigestInfo info;
     lua_hash_digest_validate(L, &info);
 
     if (lua_istable(L, 2))
     {
-
 #if LUA_VERSION_NUM == 501
-        lua_Integer table_size = lua_objlen(L, 2);
+        table_size = lua_objlen(L, 2);
 #else
-        lua_Integer table_size = luaL_len(L, 2);
+        table_size = luaL_len(L, 2);
 #endif
         if (table_size == 0)
         {
-            luaL_error(L, "table is empty");
+            return luaL_error(L, "table is empty");
         }
 
-        if (table_size >= UINT_MAX)
+        if (table_size >= (lua_Integer)UINT_MAX)
         {
-            luaL_error(L, "table is too long");
+            return luaL_error(L, "table is too long");
         }
 
-        unsigned int size = (unsigned int)table_size;
-        unsigned char *buffer = (unsigned char *)malloc(size * sizeof(unsigned char));
+        size = (unsigned int)table_size;
+        buffer = (unsigned char *)malloc(size * sizeof(unsigned char));
 
         if (buffer == NULL)
         {
-            luaL_error(L, "Memory allocation for the update buffer failed");
+            return luaL_error(L, "Memory allocation for the update buffer failed");
         }
 
-        lua_Integer i = 1;
+        i = 1;
         while (i <= table_size)
         {
             lua_pushinteger(L, i);
             lua_gettable(L, 2);
-            lua_Integer value = luaL_checkinteger(L, -1);
+            value = luaL_checkinteger(L, -1);
             lua_pop(L, 1);
 
             if (0 <= value && value <= 0xFF)
@@ -721,9 +765,8 @@ static int lua_hash_digest_update(lua_State *L)
             else
             {
                 free((void *)buffer);
-                char errMsg[100];
                 sprintf(errMsg, "value at table index %u is out of 0 - 255 range", (unsigned int)i);
-                luaL_error(L, errMsg);
+                return luaL_error(L, errMsg);
             }
 
             i++;
@@ -734,17 +777,16 @@ static int lua_hash_digest_update(lua_State *L)
     }
     else if (lua_isstring(L, 2))
     {
-        size_t size;
-        const char *data = luaL_checklstring(L, 2, &size);
+        data = luaL_checklstring(L, 2, &str_size);
 
-        luaL_argcheck(L, size > 0, 2, "string cannot be empty");
+        luaL_argcheck(L, str_size > 0, 2, "string cannot be empty");
 
         /* #5 argument == 1 allows the buffer to be freed */
-        lua_hash_digest_update_core(L, (unsigned char *)data, size, &info, 0);
+        lua_hash_digest_update_core(L, (unsigned char *)data, str_size, &info, 0);
     }
     else
     {
-        luaL_error(L, "#2 argument must be a table or string");
+        return luaL_error(L, "#2 argument must be a table or string");
     }
 
     return 0;
@@ -798,6 +840,11 @@ static void lua_hash_digest_finalize_core(lua_State *L, void *buffer, LuaDigestI
 
 static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *info, int return_hex)
 {
+    unsigned char *buffer_cast;
+    size_t i;
+    size_t hex_offset;
+    size_t hex_string_len;
+    char *hex_string;
     void *buffer = malloc(info->algo->digest_length * sizeof(unsigned char));
     if (buffer == NULL)
     {
@@ -809,16 +856,16 @@ static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *in
 
     if (return_hex)
     {
-        size_t hex_string_len = 2 * info->algo->digest_length;
-        char *hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
+        hex_string_len = 2 * info->algo->digest_length;
+        hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
         if (hex_string == NULL)
         {
             luaL_error(L, "Failed to allocate memory for the digest");
         }
 
-        unsigned char *buffer_cast = (unsigned char *)buffer;
+        buffer_cast = (unsigned char *)buffer;
 
-        for (size_t i = 0, hex_offset = 0; i < info->algo->digest_length; i++, hex_offset += 2)
+        for (i = 0, hex_offset = 0; i < info->algo->digest_length; i++, hex_offset += 2)
         {
             sprintf(hex_string + hex_offset, "%02x", buffer_cast[i]);
         }
@@ -837,6 +884,11 @@ static void lua_hash_digest_finalize_string_core(lua_State *L, LuaDigestInfo *in
 
 static int lua_hash_digest_finalize(lua_State *L)
 {
+    const char *return_type;
+    int return_hex;
+    void *buffer;
+    unsigned char *buffer_cast;
+    int i;
     LuaDigestInfo info;
     lua_hash_digest_validate(L, &info);
 
@@ -851,13 +903,13 @@ static int lua_hash_digest_finalize(lua_State *L)
 
         if (lua_isstring(L, -1))
         {
-            const char *return_type = lua_tostring(L, -1);
+            return_type = lua_tostring(L, -1);
 
             if (strcmp(return_type, "string") == 0)
             {
                 lua_pushstring(L, "hex");
                 lua_gettable(L, 2);
-                int return_hex = lua_toboolean(L, -1);
+                return_hex = lua_toboolean(L, -1);
 
                 /* remove both return_type and return_hex from stack */
                 lua_pop(L, 2);
@@ -869,10 +921,10 @@ static int lua_hash_digest_finalize(lua_State *L)
                 /* remove return_type from stack */
                 lua_pop(L, 1);
 
-                void *buffer = malloc(info.algo->digest_length * sizeof(unsigned char));
+                buffer = malloc(info.algo->digest_length * sizeof(unsigned char));
                 if (buffer == NULL)
                 {
-                    luaL_error(L, "Failed to allocate memory for the digest output");
+                    return luaL_error(L, "Failed to allocate memory for the digest output");
                 }
 
                 /* #4 argument == 1 allows the buffer to be freed */
@@ -880,9 +932,9 @@ static int lua_hash_digest_finalize(lua_State *L)
 
                 lua_createtable(L, info.algo->digest_length, 0);
 
-                unsigned char *buffer_cast = (unsigned char *)buffer;
+                buffer_cast = (unsigned char *)buffer;
 
-                for (int i = 1; i <= ((int)info.algo->digest_length); i++)
+                for (i = 1; i <= ((int)info.algo->digest_length); i++)
                 {
                     lua_pushinteger(L, i);
                     lua_pushinteger(L, 0xFF & (buffer_cast[i - 1]));
@@ -895,19 +947,19 @@ static int lua_hash_digest_finalize(lua_State *L)
             {
                 /* remove return_type from the stack */
                 lua_pop(L, 1);
-                luaL_error(L, "type field must be 'string' or 'table'");
+                return luaL_error(L, "type field must be 'string' or 'table'");
             }
         }
         else
         {
             /* remove return_type from the stack */
             lua_pop(L, 1);
-            luaL_error(L, "the 'type' field must be have a type of 'string' or 'table'");
+            return luaL_error(L, "the 'type' field must be have a type of 'string' or 'table'");
         }
     }
     else
     {
-        luaL_error(L, "#2 argument must be of type 'nil' or 'table'");
+        return luaL_error(L, "#2 argument must be of type 'nil' or 'table'");
     }
 
     /* prevent further usage of the digest */
@@ -934,6 +986,46 @@ static const luaL_Reg lua_hash_digest_functions[] = {
 
 static int lua_hash_oneshot(lua_State *L)
 {
+    /* variable definitions */
+#if defined(LUA_HASH_USE_WIN32)
+    BCRYPT_ALG_HANDLE algorithm_handle;
+    NTSTATUS status;
+    ULONG hashSize;
+    ULONG copiedCount;
+
+    /* digest handle */
+    BCRYPT_HASH_HANDLE ctx_handle;
+#elif defined(LUA_HASH_USE_APPLE)
+    size_t ctx_size;
+    LuaDigestInit init_fn;
+    LuaDigestUpdate update_fn;
+    LuaDigestFinal final_fn;
+
+    /* digest handle */
+    void *ctx_handle;
+#elif defined(LUA_HASH_USE_OPENSSL)
+#if defined(OPENSSL_VERSION_PREREQ) && OPENSSL_VERSION_PREREQ(3,0)
+    EVP_MD *algorithm_handle;
+#else
+    const EVP_MD *algorithm_handle;
+#endif
+
+    /* digest handle */
+    EVP_MD_CTX *ctx_handle;
+    unsigned int len;
+#endif
+
+    void *output_buffer;
+    size_t i;
+    size_t hex_offset;
+    unsigned char *output_buffer_cast;
+    size_t hex_string_len;
+    char *hex_string;
+
+    size_t size;
+    const char *data;
+    size_t digest_length;
+
     /* start of algorithm open */
     const char *name = luaL_checkstring(L, 1);
 
@@ -941,20 +1033,14 @@ static int lua_hash_oneshot(lua_State *L)
 
     if (entry_index == -1)
     {
-        luaL_error(L, "hash algorithm not found");
+        return luaL_error(L, "hash algorithm not found");
     }
 
-    size_t size;
-    const char *data = luaL_checklstring(L, 2, &size);
+    data = luaL_checklstring(L, 2, &size);
 
     luaL_argcheck(L, size > 0, 2, "string cannot be empty");
 
-    size_t digest_length;
-
 #if defined(LUA_HASH_USE_WIN32)
-    BCRYPT_ALG_HANDLE algorithm_handle;
-    NTSTATUS status;
-
     status = BCryptOpenAlgorithmProvider(
         &algorithm_handle,
         lua_hash_algorithms[entry_index].implementation,
@@ -964,11 +1050,11 @@ static int lua_hash_oneshot(lua_State *L)
 
     if (status != STATUS_SUCCESS)
     {
-        luaL_error(L, "Error opening algorithm provider through BCryptOpenAlgorithmProvider. Most likely, it is unsupported by the underlying bcrypt library.");
+        return luaL_error(L, "Error opening algorithm provider through BCryptOpenAlgorithmProvider. Most likely, it is unsupported by the underlying bcrypt library.");
     }
 
-    ULONG hashSize = 0;
-    ULONG copiedCount = 0;
+    hashSize = 0;
+    copiedCount = 0;
 
     status = BCryptGetProperty(
         algorithm_handle,
@@ -982,17 +1068,12 @@ static int lua_hash_oneshot(lua_State *L)
     if (status != STATUS_SUCCESS)
     {
         BCryptCloseAlgorithmProvider(algorithm_handle, 0);
-        luaL_error(L, "Failed to get the digest length in bytes through BCryptGetProperty.");
+        return luaL_error(L, "Failed to get the digest length in bytes through BCryptGetProperty.");
     }
 
     digest_length = (size_t)hashSize;
 
 #elif defined(LUA_HASH_USE_APPLE)
-    size_t ctx_size;
-    LuaDigestInit init_fn;
-    LuaDigestUpdate update_fn;
-    LuaDigestFinal final_fn;
-
     ctx_size = lua_hash_algorithms[entry_index].ctx_size;
     init_fn = lua_hash_algorithms[entry_index].init_fn;
     update_fn = lua_hash_algorithms[entry_index].update_fn;
@@ -1001,20 +1082,18 @@ static int lua_hash_oneshot(lua_State *L)
 
 #elif defined(LUA_HASH_USE_OPENSSL)
 #if defined(OPENSSL_VERSION_PREREQ) && OPENSSL_VERSION_PREREQ(3,0)
-    EVP_MD *algorithm_handle;
     algorithm_handle = EVP_MD_fetch(NULL, name, NULL);
 
     if (algorithm_handle == NULL)
     {
-        luaL_error(L, "Error opening algorithm provider through EVP_MD_fetch. Most likely, it is unsupported by the underlying OPENSSL library.");
+        return luaL_error(L, "Error opening algorithm provider through EVP_MD_fetch. Most likely, it is unsupported by the underlying OPENSSL library.");
     }
 #else
-    const EVP_MD *algorithm_handle;
     algorithm_handle = EVP_get_digestbyname(name);
 
     if (algorithm_handle == NULL)
     {
-        luaL_error(L, "Error opening algorithm provider through EVP_get_digestbyname. Most likely, it is unsupported by the underlying OPENSSL library.");
+        return luaL_error(L, "Error opening algorithm provider through EVP_get_digestbyname. Most likely, it is unsupported by the underlying OPENSSL library.");
     }
 #endif
 
@@ -1024,8 +1103,6 @@ static int lua_hash_oneshot(lua_State *L)
 
     /* begin of context new */
 #if defined(LUA_HASH_USE_WIN32)
-    /* digest handle */
-    BCRYPT_HASH_HANDLE ctx_handle;
 
     status = BCryptCreateHash(
         algorithm_handle,
@@ -1040,19 +1117,15 @@ static int lua_hash_oneshot(lua_State *L)
     if (status != STATUS_SUCCESS)
     {
         BCryptCloseAlgorithmProvider(algorithm_handle, 0);
-        luaL_error(L, "Error creating context through BCryptCreateHash");
+        return luaL_error(L, "Error creating context through BCryptCreateHash");
     }
 #elif defined(LUA_HASH_USE_APPLE)
-    /* digest handle */
-    void *ctx_handle;
     ctx_handle = malloc(ctx_size);
     if (ctx_handle == NULL)
     {
-        luaL_error(L, "Memory allocation for the digest context failed");
+        return luaL_error(L, "Memory allocation for the digest context failed");
     }
 #elif defined(LUA_HASH_USE_OPENSSL)
-    /* digest handle */
-    EVP_MD_CTX *ctx_handle;
     ctx_handle = EVP_MD_CTX_create();
     if (ctx_handle == NULL)
     {
@@ -1061,7 +1134,7 @@ static int lua_hash_oneshot(lua_State *L)
 #else
         /* do nothing */
 #endif
-        luaL_error(L, "Memory allocation for the digest context failed");
+        return luaL_error(L, "Memory allocation for the digest context failed");
     }
 #endif
     /* end of context new */
@@ -1074,7 +1147,7 @@ static int lua_hash_oneshot(lua_State *L)
     if (!init_fn(ctx_handle))
     {
         free(ctx_handle);
-        luaL_error(L, "Error intializing digest through init");
+        return luaL_error(L, "Error intializing digest through init");
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
@@ -1086,7 +1159,7 @@ static int lua_hash_oneshot(lua_State *L)
 #else
         /* do nothing */
 #endif
-        luaL_error(L, "Error intializing digest through EVP_DigestInit");
+        return luaL_error(L, "Error intializing digest through EVP_DigestInit");
     }
 
 #endif
@@ -1105,14 +1178,14 @@ static int lua_hash_oneshot(lua_State *L)
     {
         BCryptDestroyHash(ctx_handle);
         BCryptCloseAlgorithmProvider(algorithm_handle, 0);
-        luaL_error(L, "Error hashing data through BCryptHashData");
+        return luaL_error(L, "Error hashing data through BCryptHashData");
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
     if (!update_fn(ctx_handle, (const void *)data, (CC_LONG)size))
     {
         free(ctx_handle);
-        luaL_error(L, "Error hashing data through update");
+        return luaL_error(L, "Error hashing data through update");
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
@@ -1124,16 +1197,16 @@ static int lua_hash_oneshot(lua_State *L)
 #else
         /* do nothing */
 #endif
-        luaL_error(L, "Error hashing data through EVP_DigestUpdate");
+        return luaL_error(L, "Error hashing data through EVP_DigestUpdate");
     }
 #endif
     /* end of digest update */
 
     /* begin of digest finalize */
-    void *output_buffer = malloc(digest_length * sizeof(unsigned char));
+    output_buffer = malloc(digest_length * sizeof(unsigned char));
     if (output_buffer == NULL)
     {
-        luaL_error(L, "Failed to allocate memory for the digest output");
+        return luaL_error(L, "Failed to allocate memory for the digest output");
     }
 
 #if defined(LUA_HASH_USE_WIN32)
@@ -1150,7 +1223,7 @@ static int lua_hash_oneshot(lua_State *L)
         free(output_buffer);
         BCryptDestroyHash(ctx_handle);
         BCryptCloseAlgorithmProvider(algorithm_handle, 0);
-        luaL_error(L, "Failed to finalize hash through BCryptFinishHash");
+        return luaL_error(L, "Failed to finalize hash through BCryptFinishHash");
     }
 
 #elif defined(LUA_HASH_USE_APPLE)
@@ -1159,12 +1232,12 @@ static int lua_hash_oneshot(lua_State *L)
     {
         free(output_buffer);
         free(ctx_handle);
-        luaL_error(L, "Failed to finalize hash through final");
+        return luaL_error(L, "Failed to finalize hash through final");
     }
 
 #elif defined(LUA_HASH_USE_OPENSSL)
 
-    unsigned int len = 0;
+    len = 0;
     if (!EVP_DigestFinal(ctx_handle, (unsigned char *)output_buffer, &len))
     {
         free(output_buffer);
@@ -1174,7 +1247,7 @@ static int lua_hash_oneshot(lua_State *L)
 #else
         /* do nothing */
 #endif
-        luaL_error(L, "Failed to finalize hash through EVP_DigestFinal_ex");
+        return luaL_error(L, "Failed to finalize hash through EVP_DigestFinal_ex");
     }
 
 #endif
@@ -1200,16 +1273,16 @@ static int lua_hash_oneshot(lua_State *L)
     ** converting the output
     ** to a hex-string
     */
-    size_t hex_string_len = 2 * digest_length;
-    char *hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
+    hex_string_len = 2 * digest_length;
+    hex_string = (char *)(malloc((hex_string_len + 1) * sizeof(char)));
     if (hex_string == NULL)
     {
-        luaL_error(L, "Failed to allocate memory for the digest");
+        return luaL_error(L, "Failed to allocate memory for the digest");
     }
 
-    unsigned char *output_buffer_cast = (unsigned char *)output_buffer;
+    output_buffer_cast = (unsigned char *)output_buffer;
 
-    for (size_t i = 0, hex_offset = 0; i < digest_length; i++, hex_offset += 2)
+    for (i = 0, hex_offset = 0; i < digest_length; i++, hex_offset += 2)
     {
         sprintf(hex_string + hex_offset, "%02x", output_buffer_cast[i]);
     }
