@@ -1,3 +1,7 @@
+## lua-hash v0.1.1
+
+* Refactored the source code to adhere to ISO C89 rules. This turns the code compatible to a wider range of C compilers.
+
 ## lua-hash v0.1.0
 
 * Added a `version` constant to the library;
